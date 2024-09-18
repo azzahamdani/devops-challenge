@@ -1,0 +1,23 @@
+# templates/bird-image-service/networkpolicy.yaml
+{{- if .Values.bird-image-service.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "bird-services.fullname" . }}-bird-image-service
+  labels:
+    {{- include "bird-services.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-image-service
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "bird-services.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bird-image-service
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "bird-services.selectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.bird-image-service.service.port }}
+{{- end }}

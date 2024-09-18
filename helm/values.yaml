@@ -1,0 +1,89 @@
+# values.yaml
+global:
+  environment: bird-challenge
+
+bird-api:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: hediabed/bird-api # Update
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4201
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  podDisruptionBudget:
+    minAvailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  networkPolicy:
+    enabled: true
+
+bird-image-service:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: hediabed/bird-image-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4200
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  podDisruptionBudget:
+    minAvailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  networkPolicy:
+    enabled: false
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik # Update
+    cert-manager.io/cluster-issuer: letsencrypt-prod # Update
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip # Update
+    traefik.ingress.kubernetes.io/router.tls: "true" # Update
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure" # Update
+    traefik.ingress.kubernetes.io/tracing: "true" # Update
+    traefik.ingress.kubernetes.io/tracing-service-name: "ingress-traefik" # Update
+    traefik.ingress.kubernetes.io/tracing-sampling-rate: "1.0" # Update
+  hosts:
+    - host: bird-services.hediabed.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: bird-api
+        - path: /image
+          pathType: Prefix
+          service: bird-image-service
+  tls:
+    - secretName: bird-services-tls
+      hosts:
+        - bird-services.hediabed.com

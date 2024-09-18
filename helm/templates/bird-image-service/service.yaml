@@ -1,0 +1,18 @@
+# templates/bird-image-service/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bird-services.fullname" . }}-bird-image-service
+  labels:
+    {{- include "bird-services.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-image-service
+spec:
+  type: {{ .Values.bird-image-service.service.type }}
+  ports:
+    - port: {{ .Values.bird-image-service.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "bird-services.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-image-service

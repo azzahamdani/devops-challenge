@@ -1,0 +1,22 @@
+# templates/bird-api/hpa.yaml
+{{- if .Values.bird-api.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bird-services.fullname" . }}-bird-api
+  labels:
+    {{- include "bird-services.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "bird-services.fullname" . }}-bird-api
+  minReplicas: {{ .Values.bird-api.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.bird-api.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.bird-api.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

@@ -1,0 +1,14 @@
+# templates/bird-api/pdb.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "bird-services.fullname" . }}-bird-api
+  labels:
+    {{- include "bird-services.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-api
+spec:
+  minAvailable: {{ .Values.bird-api.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "bird-services.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bird-api

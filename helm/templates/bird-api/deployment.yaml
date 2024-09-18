@@ -1,0 +1,35 @@
+# templates/bird-api/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bird-services.fullname" . }}-bird-api
+  labels:
+    {{- include "bird-services.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bird-api
+spec:
+  {{- if not .Values.bird-api.autoscaling.enabled }}
+  replicas: {{ .Values.bird-api.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bird-services.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bird-api
+  template:
+    metadata:
+      labels:
+        {{- include "bird-services.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bird-api
+    spec:
+      serviceAccountName: {{ include "bird-services.fullname" . }}-bird-api
+      securityContext:
+        {{- toYaml .Values.bird-api.securityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-bird-api
+          image: "{{ .Values.bird-api.image.repository }}:{{ .Values.bird-api.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.bird-api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.bird-api.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.bird-api.resources | nindent 12 }}
