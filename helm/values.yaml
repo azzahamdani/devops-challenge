@@ -30,7 +30,12 @@ birdAPI:
     runAsNonRoot: true
     runAsUser: 1000
   networkPolicy:
-    enabled: false
+    enabled: true
+    ingressController:
+      namespaceSelector:
+        name: ingress-nginx
+      podSelector:
+        app.kubernetes.io/name: ingress-nginx
 
 birdImageService:
   enabled: true
@@ -61,6 +66,11 @@ birdImageService:
     runAsUser: 1000
   networkPolicy:
     enabled: false
+    ingressController:
+      namespaceSelector:
+        name: ingress-nginx
+      podSelector:
+        app.kubernetes.io/name: ingress-nginx
 
 ingress:
   enabled: true

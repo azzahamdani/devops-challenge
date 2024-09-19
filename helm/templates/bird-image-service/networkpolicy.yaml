@@ -20,4 +20,16 @@ spec:
       ports:
         - protocol: TCP
           port: {{ .Values.birdImageService.service.port }}
+    {{- if .Values.birdImageService.networkPolicy.ingressController }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- .Values.birdImageService.networkPolicy.ingressController.namespaceSelector | toYaml | nindent 14 }}
+          podSelector:
+            matchLabels:
+              {{- .Values.birdImageService.networkPolicy.ingressController.podSelector | toYaml | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.birdImageService.service.port }}
+    {{- end }}
 {{- end }}

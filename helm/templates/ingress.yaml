@@ -1,5 +1,4 @@
-# templates/ingress.yaml
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -34,9 +33,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "bird-services.fullname" $ }}-{{ .service }}
+                name: {{ include "bird-services.fullname" $ }}-{{ .service | default "unknown-service" }}
                 port:
-                  number: {{ if eq .service "birdAPI" }}{{ $.Values.birdAPI.service.port }}{{ else }}{{ $.Values.birdImageService.service.port }}{{ end }}
+                  number: {{ if eq .service "bird-api" }}{{ $.Values.birdAPI.service.port }}{{ else if eq .service "bird-image-service" }}{{ $.Values.birdImageService.service.port }}{{ else }} 80 {{ end }}
           {{- end }}
     {{- end }}
 {{- end }}
