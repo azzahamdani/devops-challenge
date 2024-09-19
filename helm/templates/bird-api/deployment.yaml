@@ -7,8 +7,8 @@ metadata:
     {{- include "bird-services.labels" . | nindent 4 }}
     app.kubernetes.io/component: bird-api
 spec:
-  {{- if not .Values.bird-api.autoscaling.enabled }}
-  replicas: {{ .Values.bird-api.replicaCount }}
+  {{- if not .Values.birdAPI.autoscaling.enabled }}
+  replicas: {{ .Values.birdAPI.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
@@ -22,14 +22,14 @@ spec:
     spec:
       serviceAccountName: {{ include "bird-services.fullname" . }}-bird-api
       securityContext:
-        {{- toYaml .Values.bird-api.securityContext | nindent 8 }}
+        {{- toYaml .Values.birdAPI.securityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}-bird-api
-          image: "{{ .Values.bird-api.image.repository }}:{{ .Values.bird-api.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.bird-api.image.pullPolicy }}
+          image: "{{ .Values.birdAPI.image.repository }}:{{ .Values.birdAPI.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.birdAPI.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.bird-api.service.port }}
+              containerPort: {{ .Values.birdAPI.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.bird-api.resources | nindent 12 }}
+            {{- toYaml .Values.birdAPI.resources | nindent 12 }}

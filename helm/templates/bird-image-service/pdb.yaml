@@ -1,5 +1,5 @@
 # templates/bird-image-service/pdb.yaml
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "bird-services.fullname" . }}-bird-image-service
@@ -7,7 +7,7 @@ metadata:
     {{- include "bird-services.labels" . | nindent 4 }}
     app.kubernetes.io/component: bird-image-service
 spec:
-  minAvailable: {{ .Values.bird-image-service.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.birdImageService.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
       {{- include "bird-services.selectorLabels" . | nindent 6 }}

@@ -1,5 +1,5 @@
 # templates/bird-image-service/networkpolicy.yaml
-{{- if .Values.bird-image-service.networkPolicy.enabled }}
+{{- if .Values.birdImageService.networkPolicy.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -19,5 +19,5 @@ spec:
               {{- include "bird-services.selectorLabels" . | nindent 14 }}
       ports:
         - protocol: TCP
-          port: {{ .Values.bird-image-service.service.port }}
+          port: {{ .Values.birdImageService.service.port }}
 {{- end }}

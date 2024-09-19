@@ -7,9 +7,9 @@ metadata:
     {{- include "bird-services.labels" . | nindent 4 }}
     app.kubernetes.io/component: bird-api
 spec:
-  type: {{ .Values.bird-api.service.type }}
+  type: {{ .Values.birdAPI.service.type }}
   ports:
-    - port: {{ .Values.bird-api.service.port }}
+    - port: {{ .Values.birdAPI.service.port }}
       targetPort: http
       protocol: TCP
       name: http

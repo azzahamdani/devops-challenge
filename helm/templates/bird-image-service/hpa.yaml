@@ -1,6 +1,6 @@
 # templates/bird-image-service/hpa.yaml
-{{- if .Values.bird-image-service.autoscaling.enabled }}
-apiVersion: autoscaling/v2beta1
+{{- if .Values.birdImageService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "bird-services.fullname" . }}-bird-image-service
@@ -12,11 +12,13 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "bird-services.fullname" . }}-bird-image-service
-  minReplicas: {{ .Values.bird-image-service.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.bird-image-service.autoscaling.maxReplicas }}
+  minReplicas: {{ .Values.birdImageService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.birdImageService.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: {{ .Values.bird-image-service.autoscaling.targetCPUUtilizationPercentage }}
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.birdImageService.autoscaling.targetCPUUtilizationPercentage }}
 {{- end }}

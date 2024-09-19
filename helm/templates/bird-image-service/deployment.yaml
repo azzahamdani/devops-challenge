@@ -7,8 +7,8 @@ metadata:
     {{- include "bird-services.labels" . | nindent 4 }}
     app.kubernetes.io/component: bird-image-service
 spec:
-  {{- if not .Values.bird-image-service.autoscaling.enabled }}
-  replicas: {{ .Values.bird-image-service.replicaCount }}
+  {{- if not .Values.birdImageService.autoscaling.enabled }}
+  replicas: {{ .Values.birdImageService.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
@@ -22,14 +22,14 @@ spec:
     spec:
       serviceAccountName: {{ include "bird-services.fullname" . }}-bird-image-service
       securityContext:
-        {{- toYaml .Values.bird-image-service.securityContext | nindent 8 }}
+        {{- toYaml .Values.birdImageService.securityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}-bird-image-service
-          image: "{{ .Values.bird-image-service.image.repository }}:{{ .Values.bird-image-service.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.bird-image-service.image.pullPolicy }}
+          image: "{{ .Values.birdImageService.image.repository }}:{{ .Values.birdImageService.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.birdImageService.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.bird-image-service.service.port }}
+              containerPort: {{ .Values.birdImageService.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.bird-image-service.resources | nindent 12 }}
+            {{- toYaml .Values.birdImageService.resources | nindent 12 }}

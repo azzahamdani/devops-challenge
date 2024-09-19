@@ -1,4 +1,8 @@
- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{/*
+Create a name based on the chart name.
+*/}}
+{{- define "bird-services.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*

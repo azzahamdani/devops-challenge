@@ -1,6 +1,6 @@
 # templates/bird-api/hpa.yaml
-{{- if .Values.bird-api.autoscaling.enabled }}
-apiVersion: autoscaling/v2beta1
+{{- if .Values.birdAPI.autoscaling.enabled }}
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "bird-services.fullname" . }}-bird-api
@@ -12,11 +12,13 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "bird-services.fullname" . }}-bird-api
-  minReplicas: {{ .Values.bird-api.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.bird-api.autoscaling.maxReplicas }}
+  minReplicas: {{ .Values.birdAPI.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.birdAPI.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: {{ .Values.bird-api.autoscaling.targetCPUUtilizationPercentage }}
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.birdAPI.autoscaling.targetCPUUtilizationPercentage }}
 {{- end }}

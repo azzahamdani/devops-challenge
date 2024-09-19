@@ -36,7 +36,7 @@ spec:
               service:
                 name: {{ include "bird-services.fullname" $ }}-{{ .service }}
                 port:
-                  number: {{ if eq .service "bird-api" }}{{ $.Values.bird-api.service.port }}{{ else }}{{ $.Values.bird-image-service.service.port }}{{ end }}
+                  number: {{ if eq .service "birdAPI" }}{{ $.Values.birdAPI.service.port }}{{ else }}{{ $.Values.birdImageService.service.port }}{{ end }}
           {{- end }}
     {{- end }}
 {{- end }}

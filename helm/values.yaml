@@ -2,11 +2,11 @@
 global:
   environment: bird-challenge
 
-bird-api:
+birdAPI:
   enabled: true
   replicaCount: 2
   image:
-    repository: hediabed/bird-api # Update
+    repository: hediabed/bird-api
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -30,9 +30,9 @@ bird-api:
     runAsNonRoot: true
     runAsUser: 1000
   networkPolicy:
-    enabled: true
+    enabled: false
 
-bird-image-service:
+birdImageService:
   enabled: true
   replicaCount: 2
   image:
@@ -64,18 +64,16 @@ bird-image-service:
 
 ingress:
   enabled: true
-  className: traefik
+  className: alb
   annotations:
-    kubernetes.io/ingress.class: traefik # Update
-    cert-manager.io/cluster-issuer: letsencrypt-prod # Update
-    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip # Update
-    traefik.ingress.kubernetes.io/router.tls: "true" # Update
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure" # Update
-    traefik.ingress.kubernetes.io/tracing: "true" # Update
-    traefik.ingress.kubernetes.io/tracing-service-name: "ingress-traefik" # Update
-    traefik.ingress.kubernetes.io/tracing-sampling-rate: "1.0" # Update
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:590184049425:certificate/eaacb3b5-91d8-4740-a03f-221fe053b84d # To Be Modified
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":443}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: alb
   hosts:
-    - host: bird-services.hediabed.com
+    - host: service1.590184049425.realhandsonlabs.net # To be modified
       paths:
         - path: /api
           pathType: Prefix
@@ -83,7 +81,3 @@ ingress:
         - path: /image
           pathType: Prefix
           service: bird-image-service
-  tls:
-    - secretName: bird-services-tls
-      hosts:
-        - bird-services.hediabed.com
