@@ -1,4 +1,3 @@
-# templates/bird-image-service/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,6 +5,10 @@ metadata:
   labels:
     {{- include "bird-services.labels" . | nindent 4 }}
     app.kubernetes.io/component: bird-image-service
+  {{- with .Values.birdImageService.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.birdImageService.service.type }}
   ports:
@@ -13,6 +16,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      {{- if and (eq .Values.birdImageService.service.type "NodePort") .Values.birdImageService.service.nodePort }}
+      nodePort: {{ .Values.birdImageService.service.nodePort }}
+      {{- end }}
   selector:
     {{- include "bird-services.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: bird-image-service

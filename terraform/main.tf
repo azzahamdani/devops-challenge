@@ -91,6 +91,36 @@ resource "aws_iam_policy" "control_plane_ssm_put" {
   })
 }
 
+# New ACM and Route 53 Policy
+resource "aws_iam_policy" "acm_route53_policy" {
+  name        = "${local.name}-acm-route53-policy"
+  path        = "/"
+  description = "IAM policy for ACM and Route 53 operations"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "acm:RequestCertificate",
+          "acm:DescribeCertificate"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "route53:ListHostedZones",
+          "route53:ListHostedZonesByName",
+          "route53:ChangeResourceRecordSets"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 module "ec2_control_plane" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "~> 5.0"
@@ -108,10 +138,6 @@ module "ec2_control_plane" {
   private_ip = "10.0.1.100" # "192.168.1.100" 
 
   user_data = base64encode(file("${path.module}/control-plane-userdata.sh"))
-  # user_data = base64encode(templatefile("${path.module}/control-plane-cloud-init.yaml", {
-  #   install_dependencies_script = file("${path.module}/control-plane-install-dependencies.sh")
-  #   configure_control_plane_script = file("${path.module}/control-plane-configure.sh")
-  # }))
 
   create_iam_instance_profile = true
   iam_role_name               = "${local.name}-control-plane-role"
@@ -121,7 +147,9 @@ module "ec2_control_plane" {
     AmazonEKSClusterPolicy             = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
     AmazonEKSVPCResourceController     = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-    ControlPlaneSSMPut                 = aws_iam_policy.control_plane_ssm_put.arn
+    ControlPlaneSSMPut                 = aws_iam_policy.control_plane_ssm_put.arn,
+    ACMRoute53Policy                   = aws_iam_policy.acm_route53_policy.arn  # New policy attached
+
   }
 
   tags = merge(local.tags, {
@@ -417,10 +445,6 @@ module "asg_worker_nodes" {
   }
 
   user_data = base64encode(file("${path.module}/worker-node-userdata.sh"))
-  # user_data = base64encode(templatefile("${path.module}/worker-node-cloud-init.yaml", {
-  #   install_dependencies_script = file("${path.module}/worker-node-install-dependencies.sh")
-  #   configure_worker_script = file("${path.module}/worker-node-configure.sh")
-  # }))
 
   tags = local.tags
 

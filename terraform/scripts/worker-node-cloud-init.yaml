@@ -1,0 +1,16 @@
+write_files:
+  - path: /root/install-dependencies.sh
+    permissions: "0744"
+    content: |
+      ${install_dependencies_script}
+  - path: /root/configure-worker.sh
+    permissions: "0744"
+    content: |
+      ${configure_worker_script}
+runcmd:
+  - echo "Starting install-dependencies.sh" >> /var/log/cloud-init-output.log
+  - /root/install-dependencies.sh 2>&1 | tee -a /var/log/install-dependencies.log
+  - echo "Finished install-dependencies.sh" >> /var/log/cloud-init-output.log
+  - echo "Starting configure-worker.sh" >> /var/log/cloud-init-output.log
+  - /root/configure-worker.sh 2>&1 | tee -a /var/log/configure-worker.log
+  - echo "Finished configure-worker.sh" >> /var/log/cloud-init-output.log

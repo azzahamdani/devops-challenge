@@ -1,10 +1,8 @@
+# scripts/install-dependencies.sh
 #!/bin/bash
 set -e
 
-# Redirect output to both console and log file
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-
-echo "Starting control plane setup..."
+echo "Starting dependencies installation..."
 
 # Function to check network connectivity
 check_network() {
@@ -47,7 +45,7 @@ echo "Updating the system..."
 retry_command "yum update -y"
 
 echo "Installing necessary dependencies..."
-retry_command "yum install -y yum-utils device-mapper-persistent-data lvm2 ebtables socat tc awscli wget git jq"
+retry_command "yum install -y yum-utils device-mapper-persistent-data lvm2 ebtables socat tc awscli wget git"
 
 echo "Installing containerd from Amazon Linux Extras..."
 retry_command "amazon-linux-extras enable docker"
@@ -121,63 +119,4 @@ EOF
 modprobe overlay
 modprobe br_netfilter
 
-echo "Retrieving instance metadata..."
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-AZ=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
-
-# Get the private IP address
-PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-
-echo "Initializing single-node Kubernetes cluster..."
-kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.30.4 --apiserver-advertise-address=$PRIVATE_IP
-
-echo "Setting up kubectl for the root user..."
-mkdir -p /root/.kube
-cp -i /etc/kubernetes/admin.conf /root/.kube/config
-chown root:root /root/.kube/config
-
-echo "Checking status of core components..."
-crictl pods
-
-echo "Checking kubelet status..."
-systemctl status kubelet
-
-echo "Checking kubelet logs..."
-journalctl -xeu kubelet --no-pager | tail -n 50
-
-echo "Attempting to get node status..."
-kubectl get nodes -o wide || echo "Failed to get node status"
-
-echo "Attempting to get pod status..."
-kubectl get pods --all-namespaces || echo "Failed to get pod status"
-
-# Generate the join command and store it in SSM Parameter Store
-echo "Generating join command and storing in SSM..."
-JOIN_COMMAND=$(kubeadm token create --print-join-command)
-aws ssm put-parameter --name "/k8s/worker-join-command" --value "$JOIN_COMMAND" --type SecureString --overwrite --region $REGION
-
-# Verify the parameter was created
-aws ssm get-parameter --name "/k8s/worker-join-command" --with-decryption --region $REGION
-
-echo "Join command stored in SSM Parameter Store"
-
-# Install git
-sudo yum install git -y
-
-# Install Helm
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
-
-# Add /usr/local/bin to PATH permanently
-echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
-source ~/.bashrc
-
-# Verify installations
-git --version
-helm version
-
-echo "Installation complete. Please restart your shell or run 'source ~/.bashrc' to apply PATH changes."
-
-echo "Control plane setup completed."
+echo "Dependencies installation completed."

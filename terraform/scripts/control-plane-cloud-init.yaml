@@ -1,0 +1,24 @@
+#cloud-config
+write_files:
+  - path: /root/install-dependencies.sh
+    permissions: "0744"
+    content: |
+      ${install_dependencies_script}
+  - path: /root/configure-control-plane.sh
+    permissions: "0744"
+    content: |
+      ${configure_control_plane_script}
+  - path: /root/install-cni.sh
+    permissions: "0744"
+    content: |
+      ${install_cni_script}
+runcmd:
+  - echo "Starting install-dependencies.sh" >> /var/log/cloud-init-output.log
+  - /root/install-dependencies.sh 2>&1 | tee -a /var/log/install-dependencies.log
+  - echo "Finished install-dependencies.sh" >> /var/log/cloud-init-output.log
+  - echo "Starting configure-control-plane.sh" >> /var/log/cloud-init-output.log
+  - /root/configure-control-plane.sh 2>&1 | tee -a /var/log/configure-control-plane.log
+  - echo "Finished configure-control-plane.sh" >> /var/log/cloud-init-output.log
+  - echo "Starting install-cni.sh" >> /var/log/cloud-init-output.log
+  - /root/install-cni.sh 2>&1 | tee -a /var/log/install-cni.log
+  - echo "Finished install-cni.sh" >> /var/log/cloud-init-output.log
