@@ -104,7 +104,8 @@ resource "aws_iam_policy" "acm_route53_policy" {
         Effect = "Allow"
         Action = [
           "acm:RequestCertificate",
-          "acm:DescribeCertificate"
+          "acm:DescribeCertificate",
+          "acm:ListCertificates"
         ]
         Resource = "*"
       },

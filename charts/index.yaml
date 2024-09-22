@@ -3,7 +3,17 @@ entries:
   bird-services:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2024-09-22T18:33:00.446896+01:00"
+    created: "2024-09-22T19:48:43.475595+01:00"
+    description: Helm chart for Bird API and Bird Image Service
+    digest: e0ab7c07bcb978c3a42dcc6e70dea5dbc8cfd2cf72cf163cb28ac11bde2abf21
+    name: bird-services
+    type: application
+    urls:
+    - https://raw.githubusercontent.com/azzahamdani/devops-challenge/main/charts/bird-services-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-09-22T19:48:43.475269+01:00"
     description: Helm chart for Bird API and Bird Image Service
     digest: ac143ffaacc325009a97cf5bb6575dc2ff3b2675e257e9489615971f5ca09564
     name: bird-services
@@ -13,7 +23,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2024-09-22T18:33:00.4465+01:00"
+    created: "2024-09-22T19:48:43.474832+01:00"
     description: Helm chart for Bird API and Bird Image Service
     digest: 53fbac27ec111fa24c2ebd8f724e49007fc3edf9a6511e837a9d4df1bcf705d8
     name: bird-services
@@ -21,4 +31,4 @@ entries:
     urls:
     - https://raw.githubusercontent.com/azzahamdani/devops-challenge/main/charts/bird-services-0.1.0.tgz
     version: 0.1.0
-generated: "2024-09-22T18:33:00.445114+01:00"
+generated: "2024-09-22T19:48:43.473968+01:00"

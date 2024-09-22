@@ -78,19 +78,5 @@ birdImageService:
 ingress:
   enabled: true
   className: alb
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
-  hosts:
-    - host: bird-service.${DOMAIN}
-      paths:
-        - path: /api
-          pathType: Prefix
-          service: bird-api
-        - path: /image
-          pathType: Prefix
-          service: bird-image-service
+  annotations: {}
+  hosts: []
