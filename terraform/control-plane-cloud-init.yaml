@@ -1,14 +1,15 @@
 #cloud-config
 write_files:
   - path: /root/install_dependencies.sh
-    permissions: '0755'
+    permissions: "0755"
     encoding: b64
     content: ${base64encode(install_dependencies_script)}
   - path: /root/configure_control_plane.sh
-    permissions: '0755'
+    permissions: "0755"
     encoding: b64
     content: ${base64encode(configure_control_plane_script)}
 
 runcmd:
   - /root/install_dependencies.sh
   - /root/configure_control_plane.sh
+  # Note: The CNI script is not automatically executed

@@ -1,2 +1,6 @@
 bird/getBird
 birdImage/getBirdImage
+terraform/.terraform
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup

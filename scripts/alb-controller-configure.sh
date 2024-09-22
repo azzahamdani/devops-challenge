@@ -39,6 +39,18 @@ helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 
 # Install the AWS Load Balancer Controller
+# helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+#   -n kube-system \
+#   --set clusterName=$CLUSTER_NAME \
+#   --set serviceAccount.create=false \
+#   --set serviceAccount.name=aws-load-balancer-controller \
+#   --set region=$REGION \
+#   --set vpcId=$VPC_ID \
+#   --set podDisruptionBudget.maxUnavailable=1 \
+#   --set enableServiceMutatorWebhook=true \
+#   --set enableEndpointSlices=true \
+#   --set controllerConfig.featureGates.SubnetsClusterTagCheck=false
+
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   -n kube-system \
   --set clusterName=$CLUSTER_NAME \
@@ -48,8 +60,11 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set vpcId=$VPC_ID \
   --set podDisruptionBudget.maxUnavailable=1 \
   --set enableServiceMutatorWebhook=true \
-  --set enableEndpointSlices=true \
-  --set controllerConfig.featureGates.SubnetsClusterTagCheck=false
+  --set controllerConfig.featureGates.SubnetsClusterTagCheck=false \
+  --set metricsBindAddr=":8080" \
+  --set webhookBindPort=9443 \
+  --set hostNetwork=true \
+  --set dnsPolicy=ClusterFirstWithHostNet
 
 # Check the status of the deployment
 kubectl get deployment -n kube-system aws-load-balancer-controller

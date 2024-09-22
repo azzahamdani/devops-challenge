@@ -53,7 +53,8 @@ PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
 
 echo "Initializing single-node Kubernetes cluster..."
-kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.30.4 --apiserver-advertise-address=$PRIVATE_IP || { echo "kubeadm init failed"; exit 1; }
+# kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.30.4 --apiserver-advertise-address=$PRIVATE_IP || { echo "kubeadm init failed"; exit 1; }
+kubeadm init --kubernetes-version=1.30.4 --apiserver-advertise-address=$PRIVATE_IP || { echo "kubeadm init failed"; exit 1; }
 
 echo "Setting up kubectl for the root user..."
 mkdir -p /root/.kube

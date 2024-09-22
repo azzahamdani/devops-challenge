@@ -10,7 +10,7 @@ locals {
   name   = "ex-${basename(path.cwd)}"
   region = "us-east-1"
 
-  vpc_cidr = "10.0.0.0/16" # 192.168.0.0/16
+  vpc_cidr = "192.168.0.0/16" # 10.0.0.0/16
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
@@ -98,19 +98,19 @@ module "ec2_control_plane" {
   name = "${local.name}-control-plane"
 
   instance_type = "t3.medium"
-  ami                         = data.aws_ami.amazon_linux_2.id
+  ami           = data.aws_ami.amazon_linux_2.id
   #ami                         = data.aws_ami.eks_optimized.id
   monitoring                  = true
   vpc_security_group_ids      = [module.security_group_control_plane.security_group_id]
   subnet_id                   = module.vpc.private_subnets[0]
   associate_public_ip_address = false
 
-  private_ip = "10.0.1.100"
+  private_ip = "192.168.1.100" # "10.0.1.100"
 
   # user_data = base64encode(file("${path.module}/control-plane-userdata.sh"))
-  user_data = base64encode(templatefile("${path.module}/control-plane-cloud-init.yaml", {
-    install_dependencies_script = file("${path.module}/control-plane-install-dependencies.sh")
-    configure_control_plane_script = file("${path.module}/control-plane-configure.sh")
+  user_data_base64 = base64encode(templatefile("${path.module}/control-plane-cloud-init.yaml", {
+    install_dependencies_script    = file("${path.module}/scripts/control-plane-install-dependencies.sh")
+    configure_control_plane_script = file("${path.module}/scripts/control-plane-configure.sh")
   }))
 
   create_iam_instance_profile = true
@@ -418,8 +418,8 @@ module "asg_worker_nodes" {
 
   # user_data = base64encode(file("${path.module}/worker-node-userdata.sh"))
   user_data = base64encode(templatefile("${path.module}/worker-node-cloud-init.yaml", {
-    install_dependencies_script = file("${path.module}/worker-node-install-dependencies.sh")
-    configure_worker_script = file("${path.module}/worker-node-configure.sh")
+    install_dependencies_script = file("${path.module}/scripts/worker-node-install-dependencies.sh")
+    configure_worker_script     = file("${path.module}/scripts/worker-node-configure.sh")
   }))
 
   tags = local.tags
