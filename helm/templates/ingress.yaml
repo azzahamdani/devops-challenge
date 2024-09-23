@@ -33,9 +33,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "bird-services.fullname" $ }}-{{ .service | default "unknown-service" }}
+                name: {{ include "bird-services.fullname" $ }}-{{ .backend.service.name | default "unknown-service" }}
                 port:
-                  number: {{ if eq .service "bird-api" }}{{ $.Values.birdAPI.service.port }}{{ else if eq .service "bird-image-service" }}{{ $.Values.birdImageService.service.port }}{{ else }} 80 {{ end }}
+                  number: {{ if eq .backend.service.name "bird-api" }}{{ $.Values.birdAPI.service.port }}{{ else if eq .backend.service.name "bird-image-service" }}{{ $.Values.birdImageService.service.port }}{{ else }} 80 {{ end }}
           {{- end }}
     {{- end }}
 {{- end }}
