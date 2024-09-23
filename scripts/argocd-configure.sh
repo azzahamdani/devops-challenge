@@ -42,7 +42,8 @@ server:
     - --insecure
   service:
     type: NodePort
-    nodePort: 30180  
+    nodePortHttp: 30180
+    nodePortHttps: 30443
     annotations:
       alb.ingress.kubernetes.io/target-type: instance
    

@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 # Set variables
 REGION="us-east-1"
@@ -8,7 +8,6 @@ echo "Domain: $DOMAIN"
 # Fetch the ARN of the existing certificate
 CERT_ARN=$(aws acm list-certificates --region $REGION --query "CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn" --output text)
 echo "Using Certificate ARN: $CERT_ARN"
-
 
 # Update values.yaml for the Helm chart
 cat <<EOF > values.yaml
@@ -67,7 +66,6 @@ grafana:
       org_role: Viewer
 EOF
 
-
 # Install Helm chart
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -77,9 +75,29 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
   --create-namespace \
   --values values.yaml
 
+# Function to check if ALB DNS is available
+check_alb_dns() {
+  kubectl get ingress -l app.kubernetes.io/name=grafana -n monitoring -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}' 2>/dev/null
+}
+
+# Wait for ALB DNS to be available (timeout after 10 minutes)
+echo "Waiting for ALB DNS to be available..."
+TIMEOUT=600
+ELAPSED=0
+while [ -z "$(check_alb_dns)" ] && [ $ELAPSED -lt $TIMEOUT ]; do
+  sleep 10
+  ELAPSED=$((ELAPSED+10))
+  echo "Still waiting... (${ELAPSED}s elapsed)"
+done
+
+if [ $ELAPSED -ge $TIMEOUT ]; then
+  echo "Timeout waiting for ALB DNS. Exiting."
+  exit 1
+fi
 
 # Get the ALB DNS name
-ALB_DNS=$(kubectl get ingress -l app.kubernetes.io/name=grafana -n monitoring -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+ALB_DNS=$(check_alb_dns)
+echo "ALB DNS is available: $ALB_DNS"
 
 # Create Route53 record
 HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name $DOMAIN --query 'HostedZones[0].Id' --output text)
