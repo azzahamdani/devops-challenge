@@ -13,7 +13,7 @@ spec:
   type: {{ .Values.birdImageService.service.type }}
   ports:
     - port: {{ .Values.birdImageService.service.port }}
-      targetPort: http
+      targetPort: {{ .Values.birdImageService.service.port }}
       protocol: TCP
       name: http
       {{- if and (eq .Values.birdImageService.service.type "NodePort") .Values.birdImageService.service.nodePort }}
