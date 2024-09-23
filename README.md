@@ -444,6 +444,6 @@ b) Dashboard as Code:
 
 ## Conclusion
 
-This project demonstrates a comprehensive approach to setting up a sample Kubernetes environment on AWS. By following these steps and best practices, you've created a scalable, observable, and manageable infrastructure suitable for hosting containerized applications.
+This project demonstrates a comprehensive approach to setting up a sample Kubernetes environment on AWS. By following these steps, you've created a scalable, observable, and manageable infrastructure suitable for hosting containerized applications.
 
 Remember to continually monitor, optimize, and update your infrastructure to maintain its efficiency and security. As your needs evolve, consider exploring advanced topics such as service mesh implementation, advanced networking policies, or multi-cluster deployments.
