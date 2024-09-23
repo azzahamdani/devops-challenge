@@ -127,7 +127,7 @@ ingress:
     alb.ingress.kubernetes.io/group.order: "3"
     alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
     alb.ingress.kubernetes.io/backend-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-path: /api
+    alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/healthcheck-port: "30201"
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
