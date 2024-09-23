@@ -2,22 +2,32 @@
 
 ## Table of Contents
 
+## Table of Contents
+
 1. [Project Overview](#project-overview)
 2. [Architecture Overview](#architecture-overview)
 3. [Prerequisites](#prerequisites)
 4. [Step-by-Step Guide](#step-by-step-guide)
-   1. [Infrastructure Setup](#1-infrastructure-setup)
-   2. [Accessing the Control Plane](#2-accessing-the-control-plane)
-   3. [Cluster Configuration](#3-cluster-configuration)
-   4. [Load Balancer Controller Installation](#4-load-balancer-controller-installation)
-   5. [TLS Certificate Configuration](#5-tls-certificate-configuration)
-   6. [Prometheus Observability Setup](#6-prometheus-observability-setup)
-   7. [GitOps with ArgoCD](#7-gitops-with-argocd)
+   - [Infrastructure Setup](#infrastructure-setup)
+   - [Accessing the Control Plane](#accessing-the-control-plane)
+   - [Cluster Configuration](#cluster-configuration)
+   - [Load Balancer Controller Installation](#load-balancer-controller-installation)
+   - [TLS Certificate Configuration](#tls-certificate-configuration)
+   - [Prometheus Observability Setup](#prometheus-observability-setup)
+   - [GitOps with ArgoCD](#gitops-with-argocd)
+   - [Bird Application Deployment](#bird-application-deployment)
 5. [Verification and Monitoring](#verification-and-monitoring)
 6. [Troubleshooting](#troubleshooting)
 7. [Security Considerations](#security-considerations)
+   - [Current Security Measures](#current-security-measures)
+   - [Areas for Enhancement](#areas-for-enhancement)
 8. [Scaling and Performance](#scaling-and-performance)
-9. [Maintenance and Updates](#maintenance-and-updates)
+   - [Application-Level Scaling](#application-level-scaling)
+   - [Node-Level Scaling](#node-level-scaling)
+   - [Cluster-Level High Availability and Performance](#cluster-level-high-availability-and-performance)
+9. [Observability Considerations and Next Steps](#observability-considerations-and-next-steps)
+   - [Current Implementation](#current-implementation)
+   - [Areas for Enhancement](#areas-for-enhancement-1)
 10. [Conclusion](#conclusion)
 
 ## Project Overview
@@ -65,7 +75,7 @@ Before starting this project, ensure you have the following:
 
 - AWS account with appropriate permissions
 - AWS CLI configured with your credentials
-- Terraform installed (version 0.14 or later)
+- Terraform installed (used version v1.9.5)
 - kubectl installed
 - Helm installed (version 3.x)
 - Git client
@@ -148,6 +158,9 @@ chmod +x certificate-configure.sh
 ./certificate-configure.sh
 ```
 
+> **Note** I utilized a pre-registered DNS name in a Public Hosted Zone on Route 53, as the project is being run on a limited cloud instance for learning purposes. 
+Having a Route 53 DNS name is a prerequisite for this setup.
+
 This step ensures encrypted traffic between clients and the cluster services.
 
 ### 6. Prometheus Observability Setup
@@ -159,7 +172,31 @@ chmod +x prometheus-configure.sh
 ./prometheus-configure.sh
 ```
 
+To access the Grafana UI, use the following default credentials:
+
+- **Username:** admin
+- **Password:** prom-operator
+
+**Important:** For security reasons, it is highly recommended to change these credentials during your first login. The default credentials are stored in the `values.yaml` file, which poses a potential security risk if not updated.
+
 This observability stack provides insights into cluster performance, resource utilization, and application metrics.
+
+<div align="center">
+  <img src="./images/1.png" alt="GrafanaLogin" />
+  <p><em>GrafanaLogin</em></p>
+</div>
+
+<div align="center">
+  <img src="./images/2.png" alt="GafanaDashbord KubeAPI"/>
+  <p><em>GafanaDashbord KubeAPI</em></p>
+</div>
+
+<div align="center">
+  <img src="./images/3.png" alt="GrafanaDashbord Bird APP"/>
+  <p><em>GrafanaDashbord Bird APP</em></p>
+</div>
+
+
 
 ### 7. GitOps with ArgoCD
 
@@ -170,7 +207,52 @@ chmod +x argocd-configure.sh
 ./argocd-configure.sh
 ```
 
+To access the ArgoCD GitOps UI, please use the following credentials:
+
+<div align="center">
+  <img src="./images/4.png" alt="ArgoCD Login"/>
+  <p><em>ArgoCD Login</em></p>
+</div>
+
+- **Username:** admin
+- **Password:** The password will be provided at the end of the script execution. Please make sure to use it.
+
+**Note:** It is crucial to change the default password immediately upon logging in. The password is stored in a Kubernetes Secret encoded in Base64 (without HSM protection), which poses a security risk if not updated.
+
 ArgoCD enables declarative, version-controlled application deployment and management.
+
+
+
+### 8. Bird Application Deployment
+
+Deploy the Bird application using ArgoCD to manage Helm releases. Follow these steps:
+
+1. Make the configuration script executable:
+   ```bash
+   chmod +x bird-app-configure.sh
+   ```
+
+2. Run the script to set up the application:
+   ```bash
+   ./bird-app-configure.sh
+   ```
+
+3. Once the deployment is complete, use the URL provided in the script output to access the application from the internet.
+
+<div align="center">
+  <img src="./images/5.png" alt="ArgoCD Application"/>
+  <p><em>ArgoCD Application</em></p>
+</div>
+
+<div align="center">
+  <img src="./images/6.png" alt="ArgoCD Application"/>
+  <p><em>ArgoCD Application 2</em></p>
+</div>
+
+<div align="center">
+  <img src="./images/7.png" alt="ArgoCD Application"/>
+  <p><em>Application</em></p>
+</div>
 
 ## Verification and Monitoring
 
@@ -181,41 +263,187 @@ After completing the setup, verify the deployment:
 3. Access Grafana dashboards for cluster metrics
 4. Log into ArgoCD UI to manage application deployments
 
-## Troubleshooting
 
-Common issues and their solutions:
+## Security Considerations and Next Steps
 
-- **Node Registration Issues**: 
-  - Verify CNI configuration
-  - Check node labels and taints
-- **Load Balancer Problems**:
-  - Ensure correct annotations on services
-  - Verify AWS Load Balancer Controller logs
-- **TLS Certificate Errors**:
-  - Double-check domain configurations in ACM
-  - Verify certificate ARNs in Kubernetes resources
+### Current Security Measures
+1. Network Security:
+   - Master Node and Worker Node are placed in Private Subnets with No Inbound Internet Access.
+   - AWS Systems Manager (SSM) is configured for secure operational access.
 
-## Security Considerations
+2. Deployment Strategy:
+   - GitOps with ArgoCD is implemented for pulling changes on app versions packaged with Helm.
+   - This strategy eliminates the need for inbound internet access, enhancing security compared to traditional CI/CD release strategies.
 
-- Regularly update and patch all components
-- Implement network policies to control pod-to-pod communication
-- Use RBAC to manage access to Kubernetes resources
-- Enable audit logging for cluster activities
-- Implement secrets management (e.g., AWS Secrets Manager or HashiCorp Vault)
+3. Network Policies:
+   - The packaged Helm charts support Network Policies.
+   - Further updates are required to fine-tune allowed traffic between services.
 
-## Scaling and Performance
+4. Cloud Security:
+   - Basic cloud security measures have been implemented.
 
-- Monitor node resource utilization and adjust Auto Scaling group as needed
-- Implement Horizontal Pod Autoscaler (HPA) for application workloads
-- Consider using Cluster Autoscaler for automatic node scaling
-- Optimize etcd performance and backups
+### Areas for Enhancement
 
-## Maintenance and Updates
+#### Container and Kubernetes Security
+1. Regular Updates and Patching:
+   - Implement a systematic process for updating and patching all components, including:
+     - Kubernetes cluster
+     - Container images
+     - Host operating systems
+   - Use tools like Trivy or Clair for container image scanning.
 
-- Regularly update Kubernetes and all installed components
-- Plan for zero-downtime upgrades of the cluster
-- Implement a robust backup and disaster recovery strategy
-- Continuously review and update security policies
+2. Network Policy Implementation:
+   - Enhance existing Network Policies (implemented in Helm) to:
+     - Control pod-to-pod communication
+     - Implement the principle of least privilege for network access
+
+3. Role-Based Access Control (RBAC):
+   - Implement and regularly review RBAC policies to manage access to Kubernetes resources.
+   - Ensure principles of least privilege and separation of duties.
+
+4. Audit Logging:
+   - Enable comprehensive audit logging for cluster activities.
+   - Implement a centralized log management solution (e.g., ELK stack, Splunk) for log analysis and alerting.
+
+5. Secrets Management:
+   - Implement a robust secrets management solution such as:
+     - AWS Secrets Manager
+     - HashiCorp Vault
+   - Ensure encryption of secrets at rest and in transit.
+
+### Application-Level Security
+1. Secure Coding Practices:
+   - Implement and enforce secure coding guidelines.
+   - Conduct regular code reviews and static code analysis.
+
+2. Dependency Management:
+   - Regularly scan and update application dependencies.
+   - Use tools like OWASP Dependency-Check or Snyk.
+
+3. Runtime Application Self-Protection (RASP):
+   - Consider implementing RASP solutions for real-time threat detection and protection.
+
+4. API Security:
+   - Implement API authentication and authorization.
+   - Use rate limiting and input validation for all API endpoints.
+
+## Scaling and Performance Considerations
+
+### Current Implementation
+
+1. Application Scaling:
+   - Helm chart for Bird application supports Horizontal Pod Autoscaler (HPA).
+   - Metrics server needs to be deployed to enable HPA functionality.
+
+2. Node Scaling:
+   - Nodes have been deployed in an Auto Scaling Group, laying the groundwork for Cluster Autoscaler implementation.
+
+3. Master Node Configuration:
+   - Currently deployed in single mode.
+
+### Areas for Enhancement
+
+#### 1. Application-Level Scaling
+
+a) Deploy Metrics Server:
+   - Install and configure Metrics Server to provide resource metrics for HPA.
+
+b) Implement Horizontal Pod Autoscaler (HPA):
+   - Configure HPA for the Bird application using the existing support in the Helm chart.
+   - Set appropriate minimum and maximum replicas, and resource utilization targets.
+
+c) Enhance HPA with Custom Metrics:
+   - Deploy Prometheus for collecting custom metrics.
+   - Configure Prometheus Adapter to expose these metrics to the HPA.
+   - Update HPA configuration to use custom metrics, such as requests per second.
+
+#### 2. Node-Level Scaling
+
+a) Implement Cluster Autoscaler:
+   - Deploy Cluster Autoscaler to automatically adjust the number of nodes based on resource demands.
+   - Configure Cluster Autoscaler to work with the existing Auto Scaling Group.
+
+b) Fine-tune Auto Scaling policies:
+   - Adjust scaling thresholds based on application performance requirements.
+   - Implement scale-out and scale-in policies to handle varying workloads efficiently.
+
+### 3. Cluster-Level High Availability and Performance
+
+a) Implement High Availability for Master Nodes:
+   - Transition from single-mode to multi-master setup for improved reliability.
+   - Deploy at least three master nodes across different availability zones.
+   - Use a load balancer to distribute API server traffic.
+
+b) ETCD Performance Optimization and Disaster Recovery:
+   - Implement regular ETCD backups.
+   - Set up a disaster recovery plan for ETCD, including off-site backup storage and restoration procedures.
+   - Monitor ETCD performance using Prometheus and Grafana, with alerts for key metrics.
+
+c) Optimize ETCD Performance:
+   - Ensure ETCD runs on high-performance SSD storage.
+   - Fine-tune ETCD parameters based on cluster size and workload, including quota and compaction settings.
+
+## Observability Considerations 
+
+### Current Implementation
+
+1. Logging:
+   - Application logging has been enhanced for improved visibility.
+
+2. Metrics:
+   - Prometheus has been installed to collect basic pod and Kubernetes metrics.
+   - Grafana has been set up for metrics visualization.
+
+### Areas for Enhancement
+
+#### 1. Application Instrumentation
+
+a) Metrics Instrumentation:
+   - Instrument the application to emit custom metrics.
+   - Consider using libraries compatible with Prometheus for easy integration (e.g., prometheus-client for Python, micrometer for Java).
+   - Define and implement key performance indicators (KPIs) specific to the Bird application.
+
+b) Tracing Instrumentation:
+   - Implement distributed tracing in the application.
+   - Use OpenTelemetry or a similar framework for standardized tracing instrumentation.
+   - Ensure all critical paths and external service calls are properly traced.
+
+#### 2. Observability Stack Enhancement
+
+a) Log Aggregation:
+   - Install and configure Loki for centralized log management.
+   - Enhance the Helm chart to support sending application logs to Loki.
+   - Set up log retention policies and indexing for efficient querying.
+
+b) Distributed Tracing:
+   - Deploy Jaeger for end-to-end distributed tracing.
+   - Configure the Helm chart to enable trace collection from the application.
+   - Set up appropriate sampling rates and retention periods for traces.
+
+c) Metrics Expansion:
+   - Extend Prometheus configuration to scrape custom application metrics.
+   - Set up recording rules and alerts for critical metrics.
+   - Create comprehensive Grafana dashboards that include both system and application-specific metrics.
+
+#### 3. Integration and Correlation
+
+a) Unified Observability:
+   - Implement links between metrics, logs, and traces for easier problem investigation.
+   - Consider using a tool like Grafana Tempo for trace-to-logs and trace-to-metrics capabilities.
+
+b) Alert Correlation:
+   - Set up intelligent alerting that correlates metrics, logs, and traces.
+   - Implement alert deduplication and grouping to reduce noise.
+
+#### 4. Observability as Code
+
+a) Helm Chart Enhancement:
+   - Update the Helm chart to include all observability components (Prometheus, Loki, Jaeger).
+   - Implement configurable values for easy customization of the observability stack.
+
+b) Dashboard as Code:
+   - Version control Grafana dashboards using tools like grafonnet.
+
 
 ## Conclusion
 

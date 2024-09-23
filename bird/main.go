@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math/rand/v2"
 	"net/http"
 	"net/url"
 )
 
-// Bird Struct used to store and transmit data
 type Bird struct {
 	Name        string
 	Description string
 	Image       string
 }
 
-// Function that return a default Bird when an error occurs
 func defaultBird(err error) Bird {
 	return Bird{
 		Name:        "Bird in disguise",
@@ -26,10 +25,10 @@ func defaultBird(err error) Bird {
 	}
 }
 
-// Function that makes request to second API ( running on port 4200)
-// uses `url.QueryEscape` for safe encoding of Bird name
 func getBirdImage(birdName string) (string, error) {
-	res, err := http.Get(fmt.Sprintf("http://localhost:4200?birdName=%s", url.QueryEscape(birdName)))
+	url := fmt.Sprintf("http://localhost:4200?birdName=%s", url.QueryEscape(birdName))
+	log.Printf("INFO: GET %s", url)
+	res, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -37,44 +36,52 @@ func getBirdImage(birdName string) (string, error) {
 	return string(body), err
 }
 
-// Function that fetches a random bird factoid from an external API
-// And then call `getBirdImage`to get an image for that bird
 func getBirdFactoid() Bird {
-	res, err := http.Get(fmt.Sprintf("%s%d", "https://freetestapi.com/api/v1/birds/", rand.IntN(50)))
+	url := fmt.Sprintf("%s%d", "https://freetestapi.com/api/v1/birds/", rand.IntN(50))
+	log.Printf("INFO: GET %s", url)
+	res, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("Error reading bird API: %s\n", err)
+		log.Printf("ERROR: Failed to fetch bird factoid: %s", err)
 		return defaultBird(err)
 	}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Printf("Error parsing bird API response: %s\n", err)
+		log.Printf("ERROR: Failed to read response body: %s", err)
 		return defaultBird(err)
 	}
 	var bird Bird
 	err = json.Unmarshal(body, &bird)
 	if err != nil {
-		fmt.Printf("Error unmarshalling bird: %s", err)
+		log.Printf("ERROR: Failed to unmarshal bird data: %s", err)
 		return defaultBird(err)
 	}
 	birdImage, err := getBirdImage(bird.Name)
 	if err != nil {
-		fmt.Printf("Error in getting bird image: %s\n", err)
+		log.Printf("ERROR: Failed to get bird image: %s", err)
 		return defaultBird(err)
 	}
 	bird.Image = birdImage
 	return bird
 }
 
-// The main Hundler function for the API. It gets a bird factoid and
-// write it as JSON Response
 func bird(w http.ResponseWriter, r *http.Request) {
+	log.Printf("INFO: %s %s", r.Method, r.URL.Path)
 	var buffer bytes.Buffer
 	json.NewEncoder(&buffer).Encode(getBirdFactoid())
 	io.WriteString(w, buffer.String())
 }
 
-// Main function that Sets a HTTP server, listening on port 4201
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	log.Printf("INFO: %s %s", r.Method, r.URL.Path)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
+}
+
 func main() {
 	http.HandleFunc("/", bird)
-	http.ListenAndServe(":4201", nil)
+	http.HandleFunc("/health", healthCheck)
+	log.Println("INFO: Starting server on :4201")
+	if err := http.ListenAndServe(":4201", nil); err != nil {
+		log.Fatalf("ERROR: Failed to start server: %v", err)
+	}
 }
