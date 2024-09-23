@@ -320,10 +320,7 @@ After completing the setup, verify the deployment:
    - Regularly scan and update application dependencies.
    - Use tools like OWASP Dependency-Check or Snyk.
 
-3. Runtime Application Self-Protection (RASP):
-   - Consider implementing RASP solutions for real-time threat detection and protection.
-
-4. API Security:
+3. API Security:
    - Implement API authentication and authorization.
    - Use rate limiting and input validation for all API endpoints.
 
