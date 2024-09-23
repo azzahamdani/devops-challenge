@@ -81,7 +81,7 @@ birdAPI:
     runAsNonRoot: true
     runAsUser: 1000
   networkPolicy:
-    enabled: true
+    enabled: false
 birdImageService:
   enabled: true
   replicaCount: 2
@@ -113,7 +113,7 @@ birdImageService:
     runAsNonRoot: true
     runAsUser: 1000
   networkPolicy:
-    enabled: true
+    enabled: false
 ingress:
   enabled: true
   ingressClassName: alb
@@ -135,22 +135,15 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
   hosts:
-    - host: bird-services.${DOMAIN}
+    - host: bird-service.${DOMAIN}
       paths:
-        - path: /api
+        - path: /
           pathType: Prefix
           backend:
             service:
               name: bird-api
               port:
                 number: 4201
-        - path: /image
-          pathType: Prefix
-          backend:
-            service:
-              name: bird-image-service
-              port:
-                number: 4200
 EOF
 
 # Create ArgoCD application manifest
@@ -227,7 +220,7 @@ aws route53 change-resource-record-sets \
             {
                 "Action": "UPSERT",
                 "ResourceRecordSet": {
-                    "Name": "bird-services.'$DOMAIN'",
+                    "Name": "bird-service.'$DOMAIN'",
                     "Type": "CNAME",
                     "TTL": 300,
                     "ResourceRecords": [{"Value": "'$ALB_DNS'"}]
@@ -237,5 +230,5 @@ aws route53 change-resource-record-sets \
     }'
 
 echo "Deployment process completed."
-echo "You can access your application at: https://bird-services.${DOMAIN}/api and https://bird-services.${DOMAIN}/image"
+echo "You can access your application at: https://bird-service.${DOMAIN} 
 echo "Bird Services deployment completed successfully!"
