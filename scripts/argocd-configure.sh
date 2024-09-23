@@ -32,16 +32,6 @@ if ! aws sts get-caller-identity &> /dev/null; then
     exit 1
 fi
 
-# Verify kubectl is configured with the correct context
-echo "Current Kubernetes context:"
-kubectl config current-context
-
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Please set the correct Kubernetes context and try again."
-    exit 1
-fi
-
 # Fetch the ARN of the existing certificate
 CERT_ARN=$(aws acm list-certificates --region $REGION --query "CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn" --output text)
 if [ -z "$CERT_ARN" ]; then

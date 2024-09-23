@@ -107,6 +107,8 @@ Verify cluster access:
 kubectl get nodes
 ```
 
+Source bashrc
+
 ### 3. Cluster Configuration
 
 Configure the Kubernetes cluster with CNI and set up worker nodes.

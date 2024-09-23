@@ -118,4 +118,6 @@ aws route53 change-resource-record-sets \
         ]
     }'
 
+# Display Prometheus URL
+echo "ArgoCD is now accessible at: https://grafana.${DOMAIN}"
 echo "Deployment completed successfully!"
