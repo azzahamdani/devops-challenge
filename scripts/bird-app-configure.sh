@@ -127,7 +127,7 @@ ingress:
     alb.ingress.kubernetes.io/group.order: "3"
     alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
     alb.ingress.kubernetes.io/backend-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/healthcheck-port: "30201"
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
@@ -137,13 +137,20 @@ ingress:
   hosts:
     - host: bird-services.${DOMAIN}
       paths:
-        - path: /
+        - path: /api
           pathType: Prefix
           backend:
             service:
               name: bird-api
               port:
                 number: 4201
+        - path: /image
+          pathType: Prefix
+          backend:
+            service:
+              name: bird-image-service
+              port:
+                number: 4200
 EOF
 
 # Create ArgoCD application manifest
