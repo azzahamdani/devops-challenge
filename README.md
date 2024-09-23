@@ -1,120 +1,237 @@
-### Step 1: AWS Infrastructure & Kubernetes Bootstrapping with `kubeadm` (using SSM)
+Here’s the updated README with an additional step for SSM into the control plane before the CNI configuration:
 
 ---
 
-#### Infrastructure Overview
+# DevOps Challenge: Cloud Infrastructure and Kubernetes Configuration
 
-This project provisions an AWS infrastructure to bootstrap a Kubernetes cluster using `kubeadm`. The core components of this infrastructure include:
+## Table of Contents
 
-- **Amazon EC2 Instances**: For both control plane and worker nodes.
-- **Amazon VPC**: A custom Virtual Private Cloud to host the EC2 instances with proper subnet, route table, internet gateway, and security group configurations.
-- **Security Groups**: Defined to allow necessary traffic between control plane and worker nodes.
-- **SSM Parameter Store**: Used for securely storing the Kubernetes join command for worker nodes.
-- **AWS Systems Manager (SSM)**: Used to securely connect to EC2 instances without SSH.
-- **Kubernetes Cluster**: Bootstrapped on EC2 instances using `kubeadm`.
+1. [Application Architecture Overview](#application-architecture-overview)
+2. [Step 1: Infrastructure Setup](#step-1-infrastructure-setup)
+3. [Step 2: Accessing the Control Plane](#step-2-accessing-the-control-plane)
+4. [Step 3: Cluster Configuration with CNI and Node Setup](#step-3-cluster-configuration-with-cni-and-node-setup)
+5. [Step 4: Installing Application Load Balancer Controller](#step-4-installing-application-load-balancer-controller)
+6. [Step 5: Configuring TLS Certificates](#step-5-configuring-tls-certificates)
+7. [Step 6: Configuring Prometheus Observability](#step-6-configuring-prometheus-observability)
+8. [Step 7: Configuring GitOps with ArgoCD](#step-7-configuring-gitops-with-argocd)
+9. [Screenshots](#screenshots)
+10. [Troubleshooting and Known Issues](#troubleshooting-and-known-issues)
+11. [Conclusion](#conclusion)
 
-The infrastructure uses AWS services with Terraform to automate provisioning. This includes configuration and installation scripts that handle the setup of the Kubernetes control plane and worker nodes.
+## Application Architecture Overview
 
----
+This challenge aims to build and configure a secure, highly available cloud infrastructure on AWS using Terraform. We will then deploy a Kubernetes cluster, configure it with CNI, Load Balancer, Prometheus, and ArgoCD for observability and GitOps. Finally, we will configure TLS certificates to secure the setup.
 
-#### Prerequisites
+### Architecture Components:
 
-Before running the project, ensure the following:
+1. **Cloud Infrastructure**: AWS VPC, public/private subnets, EKS cluster.
+2. **Kubernetes Cluster**: EKS cluster with CNI plugin and Load Balancer Controller.
+3. **Observability**: Prometheus and Grafana.
+4. **GitOps**: ArgoCD for managing Kubernetes resources.
+5. **TLS**: ACM certificates for secure access to services.
 
-1. **AWS Account**: You need an active AWS account with programmatic access.
-2. **AWS CLI**: AWS CLI must be installed and configured with appropriate credentials.
-3. **Terraform CLI**: Terraform should be installed locally.
-4. **IAM Role**: Ensure the EC2 instances have an IAM role with appropriate permissions to use SSM.
+## Step 1: Infrastructure Setup
 
----
+Set up the foundational infrastructure using Terraform.
 
-#### Project Structure
+### Commands
 
-- **`main.tf`**: Defines the core resources such as EC2 instances, security groups, and networking.
-- **`variables.tf`**: Contains variable definitions to customize infrastructure parameters.
-- **`output.tf`**: Outputs important values such as instance IDs and Kubernetes join command.
-- **`control-plane-install-dependencies.sh`**: Installs necessary dependencies for the control plane.
-- **`control-plane-configure.sh`**: Configures the control plane node.
-- **`worker-node-install-dependencies.sh`**: Installs necessary dependencies for worker nodes.
-- **`worker-node-configure.sh`**: Configures worker nodes to join the cluster.
-- **`control-plane-cloud-init.yaml` and `worker-node-cloud-init.yaml`**: Cloud-init scripts for bootstrapping instances.
+```bash
+terraform init 
+terraform validate
+terraform plan 
+terraform apply 
+```
 
----
+### Expected Output
 
-#### Important Notes
+```
+Apply complete! Resources: 80 added, 0 changed, 0 destroyed.
 
-1. **CNI and Add-Ons Installation**:
-   - The cloud-init functionality provided in this project **only bootstraps the Kubernetes cluster**. It does not install the Container Network Interface (CNI) or any other add-ons required to run workloads in the cluster.
-   - Installation of the CNI (e.g., Calico, Weave, etc.) and any other add-ons will be handled **via shell scripts** after the initial setup. This separation ensures **better practice** by keeping configuration management separate from the Infrastructure as Code (IaC) provisioning process.
+Outputs:
 
-2. **Node Configuration via SSM**:
-   - There is a **possibility** that one of the nodes may not fully configure due to potential bootstrapping issues. However, these nodes are **SSM-accessible** (without the need for SSH), and the necessary configuration scripts are located under the `/root` directory on each node. You can connect to the node using SSM and manually run the configuration script if needed.
+private_subnets = [
+  "subnet-00319a94683a625aa",
+  "subnet-0128304fb4819130e",
+  "subnet-056e47be12d1edb29",
+]
+public_subnets = [
+  "subnet-0909d03fc581e5b6d",
+  "subnet-0a216a372c9bdbd04",
+  "subnet-0b12aeadba1f22abb",
+]
+vpc_cidr_block = "10.0.0.0/16"
+vpc_id = "vpc-0697610217117fd52"
+```
 
----
+## Step 2: Accessing the Control Plane
 
-#### How to Run the Project
+In this step, you will access the control plane instance using AWS Systems Manager (SSM) to perform operational tasks and monitor the cluster. This instance acts as the operations center for your infrastructure.
 
-Follow these steps to provision the infrastructure and bootstrap the Kubernetes cluster:
+### Commands
 
-1. **Clone the Repository**:
-   - Clone the repository containing the Terraform code and necessary scripts to your local machine.
-
-2. **Set Up AWS Credentials**:
-   - Ensure you have your AWS credentials set up locally. You can configure this using the AWS CLI:
-
-   ```bash
-   aws configure
-   ```
-
-   This will prompt you to provide your AWS Access Key, Secret Access Key, region, and output format.
-
-3. **Initialize Terraform**:
-   - Initialize Terraform in the project directory to download provider plugins and set up the backend:
-
-   ```bash
-   terraform init
-   ```
-
-4. **Customize Variables**:
-   - Review and update variables in `variables.tf` as needed for your environment, such as the EC2 instance type, key pair, and VPC details.
-
-5. **Plan the Infrastructure**:
-   - Run the Terraform `plan` command to preview the changes that will be applied to your AWS environment:
+1. **List Running Instances with SSM Capability:**
 
    ```bash
-   terraform plan
+   aws ssm describe-instance-information --query 'InstanceInformationList[*].[InstanceId, PingStatus]'
    ```
 
-6. **Apply the Configuration**:
-   - Once satisfied with the plan, apply the Terraform configuration to create the infrastructure:
+   This command will list all instances in your account that have the SSM agent running and are accessible via SSM.
+
+2. **SSM into the Control Plane Instance:**
+
+   Replace `instance-id` with the actual instance ID of the control plane.
 
    ```bash
-   terraform apply
+   aws ssm start-session --target instance-id
    ```
 
-   Confirm the action when prompted.
+   This command initiates an SSM session into the control plane instance. You can use this session to perform administrative tasks on the control plane.
 
-7. **Access Control Plane via SSM**:
-   - Once the infrastructure is provisioned, you can connect to the control plane node using AWS Systems Manager (SSM) without needing to SSH into the instance. Ensure the instance is correctly tagged and has the required IAM permissions to use SSM.
-   
-   To connect to the control plane node using SSM, use the following AWS CLI command:
+3. **Verify Control Plane Access:**
 
-   ```bash
-   aws ssm start-session --target <control-plane-instance-id>
-   ```
-
-   Replace `<control-plane-instance-id>` with the instance ID of the control plane, which can be retrieved from the Terraform output.
-
-8. **Worker Node Configuration**:
-   - The worker nodes will automatically retrieve the Kubernetes join command from the AWS SSM Parameter Store and join the cluster.
-
-9. **Verify the Cluster**:
-   - After the worker nodes have joined, you can verify the Kubernetes cluster from the control plane node via SSM:
+   Once inside the instance, verify access by checking the Kubernetes cluster status.
 
    ```bash
    kubectl get nodes
    ```
 
+   You should see a list of nodes connected to the EKS cluster, indicating that the control plane has access to manage the cluster.
+
+### Expected Output
+
+```
+Starting session with SessionId: my-session-id
+```
+
+You are now connected to the control plane instance, which acts as the operations center for managing your infrastructure.
+
+## Step 3: Cluster Configuration with CNI and Node Setup
+
+### Prerequisites
+
+Ensure you have access to the control plane instance as described in Step 2.
+
+### Commands
+
+```bash
+git clone https://github.com/azzahamdani/devops-challenge.git
+cd devops-challenge/scripts
+
+chmod +x ./control-plane-cni.sh 
+./control-plane-cni.sh
+
+chmod +x nodes-configure.sh 
+./nodes-configure.sh
+```
+
+### Expected Output
+
+```
+Processing node: ip-10-0-1-100.ec2.internal
+Patching node ip-10-0-1-100.ec2.internal with provider ID aws://us-east-1a/i-000307ea1010bad1c
+node/ip-10-0-1-100.ec2.internal patched
+...
+Finished checking nodes..
+```
+
+This step configures the CNI and prepares the nodes in the EKS cluster.
+
+## Step 4: Installing Application Load Balancer Controller
+
+### Commands
+
+```bash
+chmod +x alb-controller-configure.sh
+./alb-controller-configure.sh
+```
+
+### Expected Output
+
+```
+AWS Load Balancer controller installed!
++ kubectl get deployment -n kube-system aws-load-balancer-controller
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+aws-load-balancer-controller   0/2     2            0           0s
+```
+
+This script installs the AWS Load Balancer Controller in your Kubernetes cluster.
+
+## Step 5: Configuring TLS Certificates
+
+### Commands
+
+```bash
+chmod +x certificate-configure.sh
+./certificate-configure.sh
+```
+
+### Expected Output
+
+```
+Certificate validated successfully!
+```
+
+This step configures ACM certificates for secure communication with your services. Certificates will be used in subsequent steps.
+
+## Step 6: Configuring Prometheus Observability
+
+### Commands
+
+```bash
+chmod +x prometheus-configure.sh
+./prometheus-configure.sh
+```
+
+### Expected Output
+
+```
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace monitoring get pods -l "release=prometheus"
+...
+Deployment completed successfully!
+```
+
+This script installs Prometheus using Helm and configures observability for the Kubernetes cluster.
+
+## Step 7: Configuring GitOps with ArgoCD
+
+### Commands
+
+```bash
+chmod +x argocd-configure.sh
+./argocd-configure.sh
+```
+
+### Expected Output
+
+```
+ArgoCD deployment completed successfully!
+ArgoCD is now accessible at: https://argocd.767398115325.realhandsonlabs.net
+```
+
+This script installs ArgoCD, adds Helm repositories, and configures ArgoCD for GitOps, leveraging the certificates configured in Step 5.
+
+## Screenshots
+
+Include screenshots of the following components:
+
+1. **Load Balancer**: ALB with DNS.
+2. **Grafana**: Grafana dashboard.
+3. **ArgoCD**: ArgoCD dashboard.
+
+## Troubleshooting and Known Issues
+
+- **Issue**: Nodes not registering correctly.
+  - **Solution**: Ensure the CNI plugin is correctly configured and nodes are patched with the right provider ID.
+  
+- **Issue**: TLS certificate validation failure.
+  - **Solution**: Double-check the domain names and CNAME records in Route53.
+
+## Conclusion
+
+Congratulations! You have successfully set up a robust cloud infrastructure with Kubernetes, observability, and GitOps. Feel free to explore and enhance this setup further.
+
 ---
 
-By following these steps, you will have a functional Kubernetes cluster provisioned on AWS EC2 instances, with control over add-on installations and the ability to manage node configurations via SSM if needed.
+Let me know if you'd like to include any additional details or modifications!

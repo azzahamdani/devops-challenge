@@ -5,7 +5,7 @@ birdAPI:
   enabled: true
   replicaCount: 2
   image:
-    repository: hediabed/bird-api
+    repository: zoeid/bird-api
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -42,7 +42,7 @@ birdImageService:
   enabled: true
   replicaCount: 2
   image:
-    repository: hediabed/bird-image-service
+    repository: zoeid/bird-image-service
     tag: latest
     pullPolicy: IfNotPresent
   service:
